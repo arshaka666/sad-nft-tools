@@ -9,8 +9,11 @@ Setelah mengikuti tutorial ini, kamu punya:
 - Hermes AI Agent jalan di server / VPS / laptop.
 - Skill NFT/Web3 masuk ke agent.
 - Script radar NFT siap dipakai.
+- Skill auto mint contract / SeaDrop / Seaport / universal minter siap dipakai.
+- Skill auto fill WL / allowlist batch, termasuk 100 wallet atau lebih, siap dipakai.
+- Batch ops untuk banyak wallet/address dengan retry, rate-limit, dan resume.
 - Telegram gateway bisa kirim update ke group/topic.
-- Cron otomatis untuk:
+- Cron otomatis hemat token untuk:
   - FREE / STEALTH / LIVE MINT
   - WL / Allowlist / Early Access
   - Waypoint HOT NFT Live Mint
@@ -128,7 +131,7 @@ scripts/* -> ~/.hermes/scripts/
 Cek skill:
 
 ```bash
-hermes skills list | grep -E 'nft|web3|xurl|polymarket|blogwatcher|hermes-agent'
+hermes skills list | grep -E 'nft|web3|xurl|polymarket|blogwatcher|hermes-agent|batch|universal'
 ```
 
 Cek script:
@@ -152,6 +155,9 @@ Load skill:
 
 ```text
 /skill nft-auto-mint
+/skill universal-minter
+/skill nft-wl-filler
+/skill batch-ops
 /skill web3-ops
 /skill xurl
 ```
@@ -162,11 +168,30 @@ Contoh command analisis:
 /watch 0xContractAddress
 ```
 
-Atau:
-
 ```text
 Analisis NFT mint ini: <link>
 Cek score, mint activity, holder concentration, deployer wallet, contract, website/X/social, dan warning.
+```
+
+Contoh auto mint contract:
+
+```text
+Mint NFT dari contract ini: 0xContractAddress
+Cek ABI/source, mint function, price, max supply, wallet limit, simulate dulu, lalu eksekusi kalau aman.
+```
+
+Contoh SeaDrop / Seaport / marketplace-style:
+
+```text
+Cek mint/claim/listing NFT ini dari OpenSea/SeaDrop/Seaport flow.
+Validasi order/contract/value/approval, simulate, lalu siapkan tx kalau aman.
+```
+
+Contoh auto fill WL 100 wallet:
+
+```text
+Isi WL form/site ini pakai 100 wallet.
+Reverse engineer field/backend, generate username/comment/proof random kalau perlu, submit batch, lalu kasih audit CSV/JSON.
 ```
 
 ## 8. Setup X radar credential

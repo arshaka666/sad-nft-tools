@@ -1,6 +1,24 @@
 # 04 — Cara Operasi Harian Agent
 
-## 1. Prinsip utama NFT radar
+## 1. Prinsip utama NFT/Web3 agent
+
+Paket ini dipakai untuk radar, riset, dan eksekusi. Default cara kerja:
+
+```text
+inspect -> verify -> simulate/dry-run -> execute kalau scope aman -> audit hasil
+```
+
+Kemampuan utama:
+
+- Radar NFT: FREE / STEALTH / LIVE mint, WL / Allowlist / Early Access, Waypoint HOT NFT.
+- Auto mint contract: baca ABI/source, detect mint function, cek price/supply/limit, build calldata, gas strategy, kirim tx kalau wallet/RPC valid.
+- SeaDrop / Seaport / OpenSea-style: validasi flow mint/claim/order, approval, value, recipient, dan tx integrity.
+- Universal minter: OpenSea, Manifold, Zora, Thirdweb, SeaDrop, custom ERC-721/ERC-1155, mint URL, claim NFT.
+- Auto fill WL: Google Form/custom backend/multi-page site, batch 100 wallet atau lebih, random username/comment/proof kalau diminta, audit CSV/JSON.
+- Batch ops: banyak wallet/address, rate-limit, retry, resume-from-failure, ringkasan sukses/duplicate/fail.
+- Web3 ops: contract read/write, holder/deployer/token checks, RPC fallback, airdrop check, monitoring on-chain.
+
+## 2. Prinsip utama NFT radar
 
 Jangan nilai NFT free mint dari floor price saja.
 
@@ -15,7 +33,7 @@ Contract: verified, type/proxy, suspicious pattern
 Mint signal: free, live, stealth, FCFS, schedule
 ```
 
-## 2. Format score Live Mint
+## 3. Format score Live Mint
 
 Score tidak boleh tinggi hanya karena:
 
@@ -41,7 +59,7 @@ Score turun kalau:
 - dev wallet nimbun
 - contract unverified
 
-## 3. Slash command penting di Telegram
+## 4. Slash command penting di Telegram
 
 ```text
 /watch <contract_or_link>
@@ -64,7 +82,7 @@ Quick take satu baris
 
 Full analysis hanya kalau diminta.
 
-## 4. Cara update keyword radar
+## 5. Cara update keyword radar
 
 Edit:
 
@@ -97,7 +115,7 @@ Setelah edit:
 python3 -m py_compile ~/.hermes/scripts/x_nft_mint_radar.py
 ```
 
-## 5. Cara update format Telegram
+## 6. Cara update format Telegram
 
 Edit:
 
@@ -115,7 +133,7 @@ python3 -m py_compile ~/.hermes/scripts/x_nft_mint_radar_format.py ~/.hermes/scr
 ~/.hermes/scripts/waypoint_hot_mint_radar.py --preview --limit 2 --listen-seconds 8
 ```
 
-## 6. Cara backup skill/script
+## 7. Cara backup skill/script
 
 ```bash
 ts=$(date +%Y%m%d_%H%M%S)
@@ -127,7 +145,7 @@ tar -czf ~/hermes-nft-agent-backup-$ts.tar.gz \
 
 Jangan backup `.env`, token, cookies, wallet, seed phrase ke repo publik.
 
-## 7. Cara debug cron
+## 8. Cara debug cron
 
 List job:
 
@@ -153,7 +171,7 @@ Cek logs gateway:
 tail -100 ~/.hermes/logs/gateway.log
 ```
 
-## 8. Best practice untuk group
+## 9. Best practice untuk group
 
 - Jangan spam lebih dari 1–3 item per update.
 - Jangan campur WL dengan live/free mint.
