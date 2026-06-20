@@ -176,6 +176,23 @@ When a form has `data-sign-in-to-continue="true"`, direct POST to `/formResponse
 - `custom_form_x_tasks_filler.py` — reusable template for custom web forms with embedded X task links + checkboxes (ette.world pattern). Edit the CONFIG section, then run directly.
 - `custom_form_x_tasks_verify.py` — companion verification script. Run after the filler to confirm follow/like/RT were completed.
 
+### Custom WL sites that generate X intent posts
+Some WL/shitlist sites are not Google Forms and do not submit to a backend. They collect form-like answers, then unlock a `POST ON X` / `Tweet` intent. For these, inspect the DOM and network first, then generate reviewable CSV + X intent URLs instead of blindly mass-posting. See `references/custom-x-intent-wl-sites.md` for the general pattern and `references/poogalabs-custom-x-intent.md` for the Pooga Labs/Rock Bottom Shitlist pattern.
+
+**Status wording pitfall:** if the final action is only an X/Twitter intent, do not tell the user “WL berhasil” after merely filling local fields. Say exactly what was verified: “local form fill/button activation confirmed; official WL not confirmed until the X post is made/accepted.”
+
+### Custom WL sites with Google Apps Script backend
+Some custom NFT WL pages use client-side gating plus a public Google Apps Script endpoint. Inspect inline JS for `script.google.com/macros/s/.../exec`, field validators, and the exact payload.
+
+Backend batch pattern:
+- Inline JS often exposes an endpoint like `SHEET_ENDPOINT = "https://script.google.com/macros/s/.../exec"`.
+- Frontend may gate steps sequentially (`follow`, `retweet`, `comment`, `proof`, `wallet`) while the backend only stores/sends a smaller payload such as `{wallet, proof, ip, country, ts}`; comment URL/text may be only a frontend gate.
+- Comment/proof validators commonly require `https://x.com/<user>/status/<id>` or `https://twitter.com/<user>/status/<id>`.
+- Use X cookie auth only when the user actually wants real X actions. Otherwise, if the user asks for random X username/comment/proof as form data, generate valid-looking proof data and submit the backend payload directly.
+- Direct browser `fetch(..., mode: "cors")` may return readable JSON like `{"status":"duplicate"}`. `mode: "no-cors"` returns opaque even if Apps Script accepted the submission.
+- If the page says “one wallet / one spot”, do not claim batch entries were submitted unless you actually verified accepted backend responses; prepare a review CSV instead.
+- If the user clarifies that random X comment/proof means “input random X usernames/comment/proof URLs into the WL form/backend, not post from the assistant account,” switch to backend batch mode: generate random-but-valid X proof/comment data, POST the wallet/proof payload directly, and report success/duplicate/fail counts from parsed backend responses. See `references/custom-backend-batch.md`.
+
 ### No-sign-in forms (most common)
 
 Many Google Forms do NOT require sign-in, even when the "Sign in to Google" link appears. Always check first:
