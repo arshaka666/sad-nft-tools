@@ -93,12 +93,20 @@ def get_oauth_token(form_key):
                 token_data.update(new_data)
                 with open(token_file, 'w') as f:
                     json.dump(token_data, f)
+                try:
+                    token_file.chmod(0o600)
+                except Exception:
+                    pass
                 return new_data["access_token"]
             else:
                 print("Token expired, re-authorizing...")
     
     # Device flow
     TOKEN_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        TOKEN_DIR.chmod(0o700)
+    except Exception:
+        pass
     
     r = requests.post("https://oauth2.googleapis.com/device/code", data={
         "client_id": CLIENT_ID,
@@ -125,6 +133,10 @@ def get_oauth_token(form_key):
             token_data["expires_at"] = time.time() + token_data.get("expires_in", 3600)
             with open(token_file, 'w') as f:
                 json.dump(token_data, f)
+            try:
+                token_file.chmod(0o600)
+            except Exception:
+                pass
             print("✅ Authorized!")
             return token_data["access_token"]
         
