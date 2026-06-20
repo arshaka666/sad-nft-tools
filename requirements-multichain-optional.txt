@@ -1,0 +1,4 @@
+solders>=0.21.0
+# Optional: uncomment only if the workflow needs these chains.
+# tonsdk
+# aptos-sdk
