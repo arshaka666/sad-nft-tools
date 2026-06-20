@@ -287,6 +287,8 @@ Lihat `cron/telegram-routing.md` dan `docs/03-telegram-gateway-and-cron.md` untu
 - Repo ini **tidak** menyertakan private key, seed phrase, mnemonic, wallet password, X cookies, Telegram bot token, API key, atau `.env`.
 - Script radar di repo ini untuk research/read-only. Tidak sign tx, tidak broadcast tx, tidak mint otomatis.
 - Skill eksekusi mint/SeaDrop/Seaport/contract bisa membantu menyiapkan dan menjalankan flow kalau user menyediakan wallet/RPC yang valid; default aman adalah inspect → simulate → konfirmasi scope → execute.
+- Untuk operasi on-chain: `sent` hanya berarti tx hash sudah broadcast; `confirmed` berarti `receipt.status == 1`; `failed` berarti `receipt.status == 0` atau source/bridge tx gagal; jangan pernah laporkan mint/transfer/swap/bridge sukses sebelum receipt/bridge tracker confirm.
+- Bridge finality wajib dibedakan dari source tx: source receipt sukses boleh dilaporkan sebagai `sent_pending_bridge`, lalu status final dicek lewat tracker seperti LI.FI/LayerZero sampai `completed` atau `failed`.
 - Auto fill WL batch harus menyimpan audit hasil submit: wallet, payload ringkas, response status, duplicate/fail reason, timestamp.
 - Jangan commit file runtime seperti `.env`, `x-radar.env`, `auth.json`, `.xurl`, wallet JSON, seed phrase, atau encrypted wallet.
 - Kalau pakai X radar, simpan cookie/token hanya di server lokal kamu: `~/.hermes/x-radar.env`, permission `chmod 600`.

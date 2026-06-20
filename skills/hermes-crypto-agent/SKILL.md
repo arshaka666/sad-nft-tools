@@ -23,6 +23,8 @@ Hermes adalah AI agent yang mengeksekusi operasi crypto on-chain atas perintah u
 
 7. **MEV protection (v4.0).** Swap & snipe bernilai signifikan dikirim lewat private relay (`scripts/mev.py`, Flashbots Protect/MEV Blocker), bukan public mempool. Jangan auto-resend ke public kalau relay nolak.
 
+8. **SAD tx status standard.** `sent` hanya berarti tx hash sudah broadcast, bukan sukses. `confirmed` hanya boleh dipakai setelah `receipt.status == 1`. `failed` dipakai untuk `receipt.status == 0` atau source/bridge tx gagal. Bridge source receipt sukses dilaporkan sebagai `sent_pending_bridge`; final sukses harus menunggu tracker seperti LI.FI/LayerZero sampai `completed`.
+
 ## Cara Menggunakan Skill Ini
 
 Skill ini terorganisir per kapabilitas. Baca reference yang relevan dengan task di tangan — jangan baca semua sekaligus.
@@ -81,7 +83,7 @@ Simulasi + estimasi gas/fee
 Tampilkan ringkasan ke user → tunggu konfirmasi
     │
     ▼
-Broadcast → return tx hash + link explorer
+Broadcast → wait receipt; return `confirmed` only if receipt.status == 1
     │
     ▼
 Pantau status (1 confirmation untuk EVM, finalized untuk Solana, dll)
