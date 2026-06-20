@@ -14,7 +14,7 @@ Paket ini bukan cuma radar. Ini kumpulan skill operasional yang bisa dipakai unt
 - **NFT research** — contract verification, deployer/dev wallet, holder concentration, real demand, volume/sales/offers, social/website/X/Discord, mint risk, dan warning singkat.
 - **Telegram delivery** — cron script-only hemat token, routing ke topic berbeda, format horizontal link, dan update singkat yang gampang dibaca.
 
-Fokus paket ini bukan cuma “mint rame” atau “floor price tinggi”, tapi juga:
+Fokus paket ini mencakup analisis:
 
 - volume / sales / offers
 - holder concentration
