@@ -303,3 +303,4 @@ Baca berurutan:
 ## License
 
 MIT. Gunakan, fork, dan modifikasi sesuai kebutuhan. Tetap DYOR sebelum connect wallet atau mint.
+by Admin GANTENG
