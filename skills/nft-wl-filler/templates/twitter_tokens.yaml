@@ -1,0 +1,15 @@
+# Twitter/X Cookies for Playwright Automation
+#
+# How to get these:
+# 1. Log into x.com in browser
+# 2. Open DevTools → Application → Cookies → x.com
+# 3. Copy 'auth_token' and 'ct0' values
+#
+# auth_token: 40-char hex string (session token)
+# ct0: 160-char hex string (CSRF token)
+#
+# IMPORTANT: Never commit this file to version control.
+# Treat these like passwords — they expire but can do damage.
+
+auth_token: ''
+ct0: ''

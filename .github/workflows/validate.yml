@@ -1,0 +1,29 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile scripts
+        run: |
+          python -m py_compile scripts/x_nft_mint_radar.py scripts/x_nft_mint_radar_format.py scripts/waypoint_hot_mint_radar.py
+      - name: Check executable bits
+        run: |
+          test -x install/install.sh
+          test -x scripts/x_nft_mint_radar_general.sh
+          test -x scripts/x_nft_mint_radar_wl.sh
+          test -x scripts/waypoint_hot_mint_radar.sh
+      - name: Secret pattern sanity check
+        run: |
+          ! grep -RInE 'X_AUTH_TOKEN=.+|X_CT0=.+|PRIVATE_KEY=.+|MNEMONIC=.+|SEED_PHRASE=.+|TELEGRAM_BOT_TOKEN=.+|api[_-]?key\s*=\s*[^<]' . \
+            --exclude-dir=.git \
+            --exclude='README.md' \
+            --exclude='*.md'
