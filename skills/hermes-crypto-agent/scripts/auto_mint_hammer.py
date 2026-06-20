@@ -32,7 +32,7 @@ def build_candidates(wallet: str, quantity: int, value_wei: int):
     return [
         {"name": "publicMint(address,uint256)", "data": "0xce6df2b9" + wallet[2:].zfill(64) + q, "value": value_wei},
         {"name": "mintPublic(uint256)", "data": "0xefd0cbf9" + q, "value": value_wei},
-        {"name": "mint(uint256)", "data": "0x1249c58b" + q, "value": value_wei},
+        {"name": "mint(uint256)", "data": "0xa0712d68" + q, "value": value_wei},
         {"name": "mint()", "data": "0x1249c58b", "value": value_wei},
     ]
 
