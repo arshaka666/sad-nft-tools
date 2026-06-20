@@ -30,7 +30,7 @@ except ImportError:  # flat execution (script disalin tanpa package context)
 
 @dataclass
 class WriteResult:
-    status: str                 # "sent" | "blocked" | "halt" | "rejected" | "sim_failed" | "error"
+    status: str                 # "confirmed" | "failed" | "sent_pending_receipt" | "blocked" | "halt" | "rejected" | "sim_failed" | "error"
     detail: str = ""
     tx_hash: Optional[str] = None
     human_readable: dict = None
@@ -150,10 +150,19 @@ class ContractWriter:
         except Exception as e:
             return WriteResult("error", repr(e), human_readable=human)
 
+        try:
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+        except Exception as e:
+            return WriteResult("sent_pending_receipt", f"tx broadcast tapi receipt belum confirmed: {e!r}",
+                               tx_hash=tx_hash, human_readable=human)
+
+        if receipt.get("status") != 1:
+            return WriteResult("failed", f"tx reverted/on-chain failed: {tx_hash}",
+                               tx_hash=tx_hash, human_readable=human)
+
         # 7. record ke governor (cap akurat)
         gov.record(intent, tx_hash)
-        base = CHAINS.get(self.chain_id, {})
-        return WriteResult("sent", "lolos sim + governor + konfirmasi", tx_hash=tx_hash,
+        return WriteResult("confirmed", f"receipt status=1, gasUsed={receipt.get('gasUsed')}", tx_hash=tx_hash,
                            human_readable=human)
 
 

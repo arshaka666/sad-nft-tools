@@ -193,9 +193,16 @@ async def _execute_reservoir_steps(w3: Web3, account: LocalAccount, plan: dict,
                                      error="dry run only; pass execute=True after user confirmation")
                 signed = account.sign_transaction(tx)
                 h = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
-                gov.record(intent, h)
                 tx_hashes.append(h)
-                w3.eth.wait_for_transaction_receipt(h, timeout=180)
+                try:
+                    receipt = w3.eth.wait_for_transaction_receipt(h, timeout=180)
+                except Exception as e:
+                    return NFTResult(status="sent_pending_receipt", tx_hashes=tx_hashes,
+                                     error=f"tx broadcast tapi receipt belum confirmed: {e!r}")
+                if receipt.get("status") != 1:
+                    return NFTResult(status="failed", tx_hashes=tx_hashes,
+                                     error=f"NFT tx reverted/on-chain failed: {h}")
+                gov.record(intent, h)
             elif kind == "signature":
                 # EIP-712 typed data signing can create/list orders; require execute=True.
                 pending_signatures += 1
@@ -210,7 +217,7 @@ async def _execute_reservoir_steps(w3: Web3, account: LocalAccount, plan: dict,
                 post_body["signature"] = signature
                 async with httpx.AsyncClient() as c:
                     await c.post(f"https://api.reservoir.tools{post_url}", json=post_body)
-    return NFTResult(status="sent" if execute else "dry_run", tx_hashes=tx_hashes,
+    return NFTResult(status="confirmed" if execute else "dry_run", tx_hashes=tx_hashes,
                      error=None if execute else f"planned {pending_signatures} signature step(s), no tx sent")
 
 
@@ -253,4 +260,9 @@ async def buy_nft_solana_me(client, keypair, token_mint: str,
     signed = VersionedTransaction(vtx.message,
                                     [keypair.sign_message(to_bytes_versioned(vtx.message))])
     sig = await client.send_raw_transaction(bytes(signed))
-    return NFTResult(status="sent", tx_hashes=[str(sig.value)])
+    try:
+        await client.confirm_transaction(sig.value)
+    except Exception as e:
+        return NFTResult(status="sent_pending_receipt", tx_hashes=[str(sig.value)],
+                         error=f"tx broadcast tapi Solana confirmation belum final: {e!r}")
+    return NFTResult(status="confirmed", tx_hashes=[str(sig.value)])

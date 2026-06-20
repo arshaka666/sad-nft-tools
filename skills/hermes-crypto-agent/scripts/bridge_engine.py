@@ -142,10 +142,18 @@ async def lifi_bridge(w3: Web3, account: LocalAccount,
         return BridgeResult(status="dry_run", error="dry run only; pass execute=True after user confirmation")
     signed = account.sign_transaction(tx)
     src_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+    try:
+        receipt = w3.eth.wait_for_transaction_receipt(src_hash, timeout=180)
+    except Exception as e:
+        return BridgeResult(status="sent_pending_receipt", src_tx_hash=src_hash,
+                            error=f"source bridge tx broadcast tapi receipt belum confirmed: {e!r}")
+    if receipt.get("status") != 1:
+        return BridgeResult(status="failed", src_tx_hash=src_hash,
+                            error="source bridge tx reverted/on-chain failed")
     gov.record(intent, src_hash)
 
     return BridgeResult(
-        status="sent",
+        status="sent_pending_bridge",
         src_tx_hash=src_hash,
         estimated_duration_sec=int(quote["estimate"].get("executionDuration", 600)),
     )
@@ -169,7 +177,7 @@ async def lifi_track(src_tx_hash: str, from_chain: int,
                     dst_tx_hash=data.get("receiving", {}).get("txHash"),
                 )
             if status == "FAILED":
-                return BridgeResult(status="error", src_tx_hash=src_tx_hash,
+                return BridgeResult(status="failed", src_tx_hash=src_tx_hash,
                                      error=data.get("substatusMessage", "bridge failed"))
             await asyncio.sleep(15)
 
@@ -307,8 +315,16 @@ async def stargate_v2_bridge(w3: Web3, account: LocalAccount,
         return BridgeResult(status="dry_run", error="dry run only; pass execute=True after user confirmation")
     signed = account.sign_transaction(tx)
     src_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+    try:
+        receipt = w3.eth.wait_for_transaction_receipt(src_hash, timeout=180)
+    except Exception as e:
+        return BridgeResult(status="sent_pending_receipt", src_tx_hash=src_hash,
+                            error=f"source bridge tx broadcast tapi receipt belum confirmed: {e!r}")
+    if receipt.get("status") != 1:
+        return BridgeResult(status="failed", src_tx_hash=src_hash,
+                            error="source bridge tx reverted/on-chain failed")
     gov.record(intent, src_hash)
-    return BridgeResult(status="sent", src_tx_hash=src_hash,
+    return BridgeResult(status="sent_pending_bridge", src_tx_hash=src_hash,
                          estimated_duration_sec=180)
 
 
@@ -317,3 +333,20 @@ async def layerzero_scan(src_tx_hash: str) -> dict:
     async with httpx.AsyncClient() as c:
         r = await c.get(f"https://scan.layerzero-api.com/v1/messages/tx/{src_tx_hash}")
     return r.json()
+
+
+async def layerzero_track(src_tx_hash: str) -> BridgeResult:
+    """Track LayerZero bridge sampai delivered/failed kalau status API menyediakan finality."""
+    while True:
+        data = await layerzero_scan(src_tx_hash)
+        messages = data.get("messages") if isinstance(data, dict) else None
+        msg = messages[0] if isinstance(messages, list) and messages else data
+        status = str((msg or {}).get("status") or (msg or {}).get("statusName") or "").upper()
+        dst_hash = (msg or {}).get("dstTxHash") or (msg or {}).get("destinationTxHash")
+        if status in {"DELIVERED", "DONE", "COMPLETED", "SUCCEEDED", "SUCCESS"}:
+            return BridgeResult(status="completed", src_tx_hash=src_tx_hash,
+                                dst_tx_hash=dst_hash)
+        if status in {"FAILED", "REVERTED", "BLOCKED"}:
+            return BridgeResult(status="failed", src_tx_hash=src_tx_hash,
+                                dst_tx_hash=dst_hash, error="LayerZero bridge failed")
+        await asyncio.sleep(15)

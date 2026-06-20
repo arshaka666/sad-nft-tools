@@ -133,6 +133,9 @@ async def deploy(abi: list, bytecode: str, account: LocalAccount, chain_id: int,
     except Exception as e:
         return DeployResult("error", repr(e))
 
+    if receipt.get("status") != 1:
+        return DeployResult("failed", f"deploy tx reverted/on-chain failed: {tx_hash}", tx_hash=tx_hash)
+
     gov.record(intent, tx_hash)
     return DeployResult("deployed", "ok", address=receipt.contractAddress, tx_hash=tx_hash)
 

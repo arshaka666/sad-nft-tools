@@ -41,7 +41,7 @@ ERC20_ABI = [
 
 @dataclass
 class SwapResult:
-    status: str            # "sent" | "blocked" | "error"
+    status: str            # "confirmed" | "failed" | "sent_pending_receipt" | "blocked" | "error"
     tx_hash: Optional[str] = None
     explorer_url: Optional[str] = None
     warnings: list[str] = None
@@ -191,8 +191,10 @@ def approve_if_needed(w3: Web3, account: LocalAccount, token: str,
         return None
     signed = account.sign_transaction(tx)
     h = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+    receipt = w3.eth.wait_for_transaction_receipt(h, timeout=120)
+    if receipt.get("status") != 1:
+        raise RuntimeError(f"approval tx reverted/on-chain failed: {h}")
     gov.record(intent, h)
-    w3.eth.wait_for_transaction_receipt(h, timeout=120)
     return h
 
 
@@ -249,8 +251,18 @@ async def swap_evm(
                           error="dry run only; pass execute=True after user confirmation")
     signed = account.sign_transaction(tx)
     h = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+    try:
+        receipt = w3.eth.wait_for_transaction_receipt(h, timeout=180)
+    except Exception as e:
+        return SwapResult(status="sent_pending_receipt", tx_hash=h, warnings=warnings,
+                          error=f"tx broadcast tapi receipt belum confirmed: {e!r}",
+                          explorer_url=_explorer_url(chain_id, h))
+    if receipt.get("status") != 1:
+        return SwapResult(status="failed", tx_hash=h, warnings=warnings,
+                          error="swap tx reverted/on-chain failed",
+                          explorer_url=_explorer_url(chain_id, h))
     gov.record(intent, h)
-    return SwapResult(status="sent", tx_hash=h, warnings=warnings,
+    return SwapResult(status="confirmed", tx_hash=h, warnings=warnings,
                        explorer_url=_explorer_url(chain_id, h))
 
 
@@ -305,7 +317,13 @@ async def swap_solana(client, keypair, input_mint: str, output_mint: str,
     signed = VersionedTransaction(vtx.message,
                                     [keypair.sign_message(to_bytes_versioned(vtx.message))])
     sig = await client.send_raw_transaction(bytes(signed))
-    return SwapResult(status="sent", tx_hash=str(sig.value),
+    try:
+        await client.confirm_transaction(sig.value)
+    except Exception as e:
+        return SwapResult(status="sent_pending_receipt", tx_hash=str(sig.value),
+                          error=f"tx broadcast tapi Solana confirmation belum final: {e!r}",
+                          explorer_url=f"https://solscan.io/tx/{sig.value}")
+    return SwapResult(status="confirmed", tx_hash=str(sig.value),
                        explorer_url=f"https://solscan.io/tx/{sig.value}")
 
 
